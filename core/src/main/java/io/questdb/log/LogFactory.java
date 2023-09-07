@@ -43,7 +43,6 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LogFactory implements Closeable {
-
     public static final String CONFIG_SYSTEM_PROPERTY = "out";
     public static final String DEBUG_TRIGGER = "ebug";
     public static final String DEBUG_TRIGGER_ENV = "QDB_DEBUG";
@@ -57,10 +56,10 @@ public class LogFactory implements Closeable {
     private static final int DEFAULT_QUEUE_DEPTH = 1024;
     private static final String EMPTY_STR = "";
     private static final LengthDescendingComparator LDC = new LengthDescendingComparator();
+    private static final boolean TEST_MODE = isRunningTests();
     private static final CharSequenceHashSet reserved = new CharSequenceHashSet();
     private static LogFactory INSTANCE;
     private static boolean envEnabled = true;
-    private static boolean overwriteWithSyncLogging = false;
     private static String rootDir;
     private final MicrosecondClock clock;
     private final AtomicBoolean closed = new AtomicBoolean();
@@ -107,16 +106,8 @@ public class LogFactory implements Closeable {
         }
     }
 
-    public static void configureAsync() {
-        overwriteWithSyncLogging = false;
-    }
-
     public static void configureRootDir(String rootDir) {
         LogFactory.rootDir = rootDir;
-    }
-
-    public static void configureSync() {
-        overwriteWithSyncLogging = true;
     }
 
     public static void disableEnv() {
@@ -260,24 +251,8 @@ public class LogFactory implements Closeable {
         final Holder err = scopeConfiguration.getHolder(Numbers.msb(LogLevel.ERROR));
         final Holder cri = scopeConfiguration.getHolder(Numbers.msb(LogLevel.CRITICAL));
         final Holder adv = scopeConfiguration.getHolder(Numbers.msb(LogLevel.ADVISORY));
-        if (!overwriteWithSyncLogging) {
-            return new Logger(
-                    clock,
-                    compressScope(key, sink),
-                    dbg == null ? null : dbg.ring,
-                    dbg == null ? null : dbg.lSeq,
-                    inf == null ? null : inf.ring,
-                    inf == null ? null : inf.lSeq,
-                    err == null ? null : err.ring,
-                    err == null ? null : err.lSeq,
-                    cri == null ? null : cri.ring,
-                    cri == null ? null : cri.lSeq,
-                    adv == null ? null : adv.ring,
-                    adv == null ? null : adv.lSeq
-            );
-        }
 
-        return new SyncLogger(
+        return new Logger(
                 clock,
                 compressScope(key, sink),
                 dbg == null ? null : dbg.ring,
@@ -552,6 +527,15 @@ public class LogFactory implements Closeable {
         return System.getProperty(DEBUG_TRIGGER) != null || System.getenv().containsKey(DEBUG_TRIGGER_ENV);
     }
 
+    private static boolean isRunningTests() {
+        try {
+            Class.forName("io.questdb.test.tools.TestUtils");
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
     private void configureDefaultWriter() {
         int level = DEFAULT_LOG_LEVEL;
         if (isForcedDebug()) {
@@ -802,7 +786,8 @@ public class LogFactory implements Closeable {
                     queueDepth,
                     MemoryTag.NATIVE_LOGGER
             );
-            this.lSeq = new MPSequence(queueDepth);
+            MPSequence seq = new MPSequence(queueDepth);
+            this.lSeq = TEST_MODE ? new BullyignSequence(seq) : seq;
         }
 
         @Override
