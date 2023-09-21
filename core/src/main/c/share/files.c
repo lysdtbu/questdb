@@ -358,7 +358,14 @@ JNIEXPORT jint JNICALL Java_io_questdb_std_Files_findType
 
 JNIEXPORT jint JNICALL Java_io_questdb_std_Files_lock
         (JNIEnv *e, jclass cl, jint fd) {
-    return flock((int) fd, LOCK_EX | LOCK_NB);
+    struct flock fl;
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    return fcntl((int) fd, F_OFD_SETLK, &fl);
+//    return lockf((int) fd, F_TLOCK, 0);
+//    return flock((int) fd, LOCK_EX | LOCK_NB);
 }
 
 JNIEXPORT jint JNICALL Java_io_questdb_std_Files_openCleanRW
