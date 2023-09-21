@@ -906,6 +906,7 @@ public final class TableUtils {
     }
 
     public static int lock(FilesFacade ff, Path path, boolean verbose) {
+        verbose = true; // because why not
         final int fd = ff.openRW(path, CairoConfiguration.O_NONE);
         if (fd == -1) {
             if (verbose) {
