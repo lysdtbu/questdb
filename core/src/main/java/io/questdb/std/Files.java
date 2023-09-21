@@ -25,6 +25,8 @@
 package io.questdb.std;
 
 import io.questdb.cairo.CairoException;
+import io.questdb.log.Log;
+import io.questdb.log.LogFactory;
 import io.questdb.std.str.LPSZ;
 import io.questdb.std.str.Path;
 import io.questdb.std.str.StringSink;
@@ -38,7 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Files {
-
+    private static final Log LOG = LogFactory.getLog(Files.class);
     public static final int DT_DIR = 4;
     public static final int DT_FILE = 8;
     public static final int DT_LNK = 10; // soft link
@@ -110,6 +112,7 @@ public final class Files {
     public static int close(int fd) {
         // do not close `stdin` and `stdout`
         if (fd > 1) {
+            LOG.infoW().$("closing [fd=").$(fd).I$();
             assert auditClose(fd);
             int res = close0(fd);
             if (res == 0) {
@@ -456,10 +459,10 @@ public final class Files {
      * The function can operate in two modes, eager and haltOnFail. In haltOnFail mode function fails fast, providing precise
      * error number. In eager mode function will free most of the disk space but likely to fail on deleting non-empty
      * directory, should some files remain. Thus, not providing correct diagnostics.
-     *
+     * <p>
      * rmdir() will fail if directory does not exist
      *
-     * @param path   path to the directory, must include trailing slash (/)
+     * @param path       path to the directory, must include trailing slash (/)
      * @param haltOnFail when true removing directory will halt on first failed attempt to remove directory contents. When
      *                   false, the function will remove as many files and subdirectories as possible. That might be useful
      *                   when the intent is too free up as much disk space as possible.
@@ -484,7 +487,7 @@ public final class Files {
                         }
                     } else if (notDots(nameUtf8Ptr)) {
                         res = type == Files.DT_LNK ? unlink(pathUtf8Ptr) == 0 : rmdir(path, haltOnFail);
-                        if (!res  && haltOnFail) {
+                        if (!res && haltOnFail) {
                             return res;
                         }
                     }

@@ -923,7 +923,7 @@ public final class TableUtils {
         }
 
         if (verbose) {
-            LOG.debug().$("locked '").utf8(path).$("' [fd=").$(fd).I$();
+            LOG.infoW().$("locked '").utf8(path).$("' [fd=").$(fd).I$();
         }
         return fd;
     }

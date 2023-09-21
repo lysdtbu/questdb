@@ -300,11 +300,16 @@ public class WalPurgeJob extends SynchronizedJob implements Closeable {
 
                 TableSequencerAPI tableSequencerAPI = engine.getTableSequencerAPI();
                 try (TransactionLogCursor transactionLogCursor = tableSequencerAPI.getCursor(tableToken, lastAppliedTxn)) {
-                    while (onDiskWalIDSet.size() > 0 && transactionLogCursor.hasNext()) {
-                        int walId = transactionLogCursor.getWalId();
-                        if (onDiskWalIDSet.remove(walId) != -1) {
-                            int segmentId = transactionLogCursor.getSegmentId();
-                            logic.trackNextToApplySegment(walId, segmentId);
+                    while (onDiskWalIDSet.size() > 0) {
+                        if (transactionLogCursor.hasNext()) {
+                            int walId = transactionLogCursor.getWalId();
+                            if (onDiskWalIDSet.remove(walId) != -1) {
+                                int segmentId = transactionLogCursor.getSegmentId();
+                                logic.trackNextToApplySegment(walId, segmentId);
+                            }
+                        } else {
+                            LOG.infoW().$("onDiskWalIDSet is still non-empty, but transactionLogCursor has no next").$();
+                            break;
                         }
                     }
                 } catch (CairoException e) {
@@ -424,6 +429,7 @@ public class WalPurgeJob extends SynchronizedJob implements Closeable {
         if (last + checkInterval < t) {
             last = t;
             if (runLock.tryLock()) {
+                LOG.infoW().$("acquired the runLock and running broadsweep").$();
                 try {
                     broadSweep();
                 } finally {
@@ -566,6 +572,9 @@ public class WalPurgeJob extends SynchronizedJob implements Closeable {
         }
 
         public void trackNextToApplySegment(int walId, int segmentId) {
+            LOG.infoW().$("trackNextToApplySegment [table=").$(tableToken.getDirName())
+                    .$(", walId=").$(walId)
+                    .$(", segmentId=").$(segmentId).$(']').$();
             final int index = nextToApply.keyIndex(walId);
             if (index > -1) {  // not tracked yet
                 nextToApply.putAt(index, walId, segmentId);

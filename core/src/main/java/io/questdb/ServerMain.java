@@ -24,10 +24,7 @@
 
 package io.questdb;
 
-import io.questdb.cairo.CairoConfiguration;
-import io.questdb.cairo.CairoEngine;
-import io.questdb.cairo.ColumnIndexerJob;
-import io.questdb.cairo.O3Utils;
+import io.questdb.cairo.*;
 import io.questdb.cairo.security.ReadOnlySecurityContextFactory;
 import io.questdb.cairo.security.SecurityContextFactory;
 import io.questdb.cairo.wal.ApplyWal2TableJob;
@@ -51,7 +48,10 @@ import io.questdb.log.LogFactory;
 import io.questdb.mp.WorkerPool;
 import io.questdb.std.CharSequenceObjHashMap;
 import io.questdb.std.Chars;
+import io.questdb.std.Files;
+import io.questdb.std.FilesFacadeImpl;
 import io.questdb.std.str.DirectByteCharSink;
+import io.questdb.std.str.Path;
 
 import java.io.Closeable;
 import java.io.File;
@@ -238,6 +238,15 @@ public class ServerMain implements Closeable {
     }
 
     public static void main(String[] args) {
+        System.out.println("---- woooohoooo, look, I am a Docker");
+        try (Path path = new Path()) {
+            path.of("/tmp/mylock");
+            int lock = TableUtils.lock(FilesFacadeImpl.INSTANCE, path);
+            TableUtils.lock(FilesFacadeImpl.INSTANCE, path);
+            if (lock != -1) {
+                Files.close(lock);
+            }
+        }
         try {
             new ServerMain(args).start(true);
         } catch (Throwable thr) {
