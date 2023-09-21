@@ -365,6 +365,7 @@ JNIEXPORT jint JNICALL Java_io_questdb_std_Files_lock
     fl.l_whence = SEEK_SET;
     fl.l_start = 0;
     fl.l_len = 0;
+    fl.l_pid = 0;
     return fcntl((int) fd, F_OFD_SETLK, &fl);
 //    return lockf((int) fd, F_TLOCK, 0);
 //    return flock((int) fd, LOCK_EX | LOCK_NB);
