@@ -240,7 +240,7 @@ public class ServerMain implements Closeable {
     public static void main(String[] args) {
         System.out.println("---- woooohoooo, look, I am a Docker");
         try (Path path = new Path()) {
-            path.of("/tmp/mylock");
+            path.of("/var/lib/questdb/test-lock");
             int lock = TableUtils.lock(FilesFacadeImpl.INSTANCE, path);
             TableUtils.lock(FilesFacadeImpl.INSTANCE, path);
             if (lock != -1) {
