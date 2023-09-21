@@ -257,6 +257,17 @@ public class WalPurgeJob extends SynchronizedJob implements Closeable {
                                             final Path segmentPath = path.trimTo(walPathLen).slash().put(segmentId);
                                             TableUtils.lockName(segmentPath);
                                             final boolean locked = isLocked(segmentPath.$());
+                                            if (locked) {
+                                                LOG.infoW().$("segment is locked [table=").$(tableToken.getDirName())
+                                                        .$(", walId=").$(walId)
+                                                        .$(", segmentId=").$(segmentId).$(']')
+                                                        .$(", lockpath=").$(segmentPath).$(']').$();
+                                            } else {
+                                                LOG.infoW().$("segment is not locked [table=").$(tableToken.getDirName())
+                                                        .$(", walId=").$(walId)
+                                                        .$(", segmentId=").$(segmentId)
+                                                        .$(", lockpath=").$(segmentPath).$(']').$();
+                                            }
                                             final boolean pendingTasks = segmentHasPendingTasks(walId, segmentId);
                                             if (pendingTasks) {
                                                 walHasPendingTasks = true;
@@ -564,6 +575,11 @@ public class WalPurgeJob extends SynchronizedJob implements Closeable {
         }
 
         public void trackDiscoveredSegment(int walId, int segmentId, boolean pendingTasks, boolean locked) {
+            LOG.infoW().$("trackDiscoveredSegment [table=").$(tableToken.getDirName())
+                    .$(", walId=").$(walId)
+                    .$(", segmentId=").$(segmentId)
+                    .$(", pendingTasks=").$(pendingTasks)
+                    .$(", locked=").$(locked).$(']').$();
             discovered.add(encodeDiscovered(walId, segmentId, pendingTasks, locked));
         }
 
