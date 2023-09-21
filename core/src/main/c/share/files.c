@@ -22,6 +22,8 @@
  *
  ******************************************************************************/
 
+#define _GNU_SOURCE
+
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
