@@ -907,7 +907,19 @@ public final class TableUtils {
 
     public static int lock(FilesFacade ff, Path path, boolean verbose) {
         verbose = true; // because why not
-        final int fd = ff.openRW(path, CairoConfiguration.O_NONE);
+        int fd = ff.openRW(path, CairoConfiguration.O_NONE);
+        if (fd == -1) {
+            if (verbose) {
+                LOG.error().$("cannot open '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
+            }
+            return -1;
+        }
+
+        // hack due to https://github.com/docker/for-mac/issues/7004
+        // close and reopen a target file to make sure the 2nd open() does not have to create the target file - that's when the bug manifests.
+        // we should probably guard this by a file-system check: do this nonsense only when running on VirtioFS
+        ff.close(fd);
+        fd = ff.openRW(path, CairoConfiguration.O_NONE);
         if (fd == -1) {
             if (verbose) {
                 LOG.error().$("cannot open '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
