@@ -40,6 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Files {
+    public static boolean VIRTIO_FS_DETECTED = false;
+    private static final int VIRTIO_FS_MAGIC = 0x6a656a63;
     private static final Log LOG = LogFactory.getLog(Files.class);
     public static final int DT_DIR = 4;
     public static final int DT_FILE = 8;
@@ -222,7 +224,11 @@ public final class Files {
      */
     public static int getFileSystemStatus(LPSZ lpszName) {
         assert lpszName.capacity() > 127;
-        return getFileSystemStatus(lpszName.address());
+        int status = getFileSystemStatus(lpszName.address());
+        if (status == VIRTIO_FS_MAGIC) {
+            VIRTIO_FS_DETECTED = true;
+        }
+        return status;
     }
 
     public static long getLastModified(LPSZ lpsz) {

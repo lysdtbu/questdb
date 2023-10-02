@@ -908,18 +908,15 @@ public final class TableUtils {
     public static int lock(FilesFacade ff, Path path, boolean verbose) {
         verbose = true; // because why not
 
-        int fd = ff.openRO(path);
-        if (fd == -1) {
-            // openRO will fail if the file does not exist
-            // that's exactly what we want. we cannot flock() on a file just created at open() due to https://github.com/docker/for-mac/issues/7004
+        if (Files.VIRTIO_FS_DETECTED) {
             if (!ff.touch(path)) {
-                LOG.error().$("cannot create '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
+                LOG.error().$("cannot touch '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
             }
-            fd = ff.openRO(path);
-            if (fd == -1) {
-                LOG.error().$("cannot open '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
-                return -1;
-            }
+        }
+        int fd = ff.openRW(path, CairoConfiguration.O_NONE);
+        if (fd == -1) {
+            LOG.error().$("cannot open '").utf8(path).$("' to lock [errno=").$(ff.errno()).I$();
+            return -1;
         }
 
         if (ff.lock(fd) != 0) {
