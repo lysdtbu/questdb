@@ -24,10 +24,55 @@
 
 package io.questdb.cairo.sql;
 
-public interface TableMetadata extends TableRecordMetadata {
+import io.questdb.cairo.TableToken;
+import io.questdb.std.QuietCloseable;
+
+public interface TableMetadata extends RecordMetadata, QuietCloseable {
+    /**
+     * The returned value defines how many row IDs to store in a single storage block on disk
+     * for an indexed column. Fewer blocks used to store row IDs achieves better performance.
+     *
+     * @param columnIndex numeric index of the column
+     * @return number of row IDs per block
+     */
+    int getIndexValueBlockCapacity(int columnIndex);
+
+    /**
+     * The returned value defines how many row IDs to store in a single storage block on disk
+     * for an indexed column. Fewer blocks used to store row IDs achieves better performance.
+     *
+     * @param columnName name of the column
+     * @return number of row IDs per block
+     */
+    default int getIndexValueBlockCapacity(CharSequence columnName) {
+        return getIndexValueBlockCapacity(getColumnIndex(columnName));
+    }
+
     int getMaxUncommittedRows();
+
+    long getMetadataVersion();
 
     long getO3MaxLag();
 
     int getPartitionBy();
+
+    int getTableId();
+
+    TableToken getTableToken();
+
+    /**
+     * Writing index for the column
+     *
+     * @param columnIndex column index
+     * @return writing index
+     */
+    int getWriterIndex(int columnIndex);
+
+    /**
+     * @param columnIndex numeric index of the column
+     * @return true if column is part of deduplication key used in inserts.
+     */
+    boolean isDedupKey(int columnIndex);
+
+    boolean isWalEnabled();
 }

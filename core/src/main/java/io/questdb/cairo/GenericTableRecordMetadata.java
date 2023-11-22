@@ -24,10 +24,11 @@
 
 package io.questdb.cairo;
 
-import io.questdb.cairo.sql.TableRecordMetadata;
+import io.questdb.cairo.sql.RecordMetadata;
 import io.questdb.cairo.wal.seq.TableRecordMetadataSink;
+import io.questdb.std.QuietCloseable;
 
-public class GenericTableRecordMetadata extends GenericRecordMetadata implements TableRecordMetadata, TableRecordMetadataSink {
+public class GenericTableRecordMetadata extends GenericRecordMetadata implements TableRecordMetadataSink, RecordMetadata, QuietCloseable {
     private long metadataVersion;
     private int tableId;
     private TableToken tableToken;

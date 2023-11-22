@@ -28,7 +28,6 @@ import io.questdb.Telemetry;
 import io.questdb.TelemetryOrigin;
 import io.questdb.TelemetrySystemEvent;
 import io.questdb.cairo.*;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMARW;
 import io.questdb.cutlass.line.LineTcpTimestampAdapter;

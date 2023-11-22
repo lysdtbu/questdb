@@ -25,15 +25,12 @@
 package io.questdb.cairo.wal.seq;
 
 import io.questdb.cairo.*;
-import io.questdb.cairo.sql.TableRecordMetadata;
+import io.questdb.cairo.sql.RecordMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMARW;
 import io.questdb.cairo.vm.api.MemoryMR;
 import io.questdb.cairo.wal.WalUtils;
-import io.questdb.std.Chars;
-import io.questdb.std.FilesFacade;
-import io.questdb.std.MemoryTag;
-import io.questdb.std.Misc;
+import io.questdb.std.*;
 import io.questdb.std.str.Path;
 
 import java.io.Closeable;
@@ -42,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static io.questdb.cairo.TableUtils.*;
 import static io.questdb.cairo.wal.WalUtils.*;
 
-public class SequencerMetadata extends AbstractRecordMetadata implements TableRecordMetadata, Closeable, TableDescriptor {
+public class SequencerMetadata extends AbstractRecordMetadata implements Closeable, TableDescriptor, RecordMetadata, QuietCloseable {
     private final FilesFacade ff;
     private final MemoryMARW metaMem;
     private final boolean readonly;

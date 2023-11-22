@@ -497,10 +497,10 @@ public class CairoEngine implements Closeable, WriterSource {
         return metadataPool.get(tableToken);
     }
 
-    public TableRecordMetadata getMetadata(TableToken tableToken, long metadataVersion) {
+    public TableMetadata getMetadata(TableToken tableToken, long metadataVersion) {
         verifyTableToken(tableToken);
         try {
-            final TableRecordMetadata metadata = metadataPool.get(tableToken);
+            final TableMetadata metadata = metadataPool.get(tableToken);
             if (metadataVersion != TableUtils.ANY_TABLE_VERSION && metadata.getMetadataVersion() != metadataVersion) {
                 final TableReferenceOutOfDateException ex = TableReferenceOutOfDateException.of(
                         tableToken,

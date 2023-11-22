@@ -26,7 +26,6 @@ package io.questdb.cutlass.line.tcp;
 
 import io.questdb.cairo.*;
 import io.questdb.cairo.sql.SymbolTable;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.sql.TableReferenceOutOfDateException;
 import io.questdb.cairo.wal.MetadataService;
 import io.questdb.log.Log;

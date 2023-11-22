@@ -615,7 +615,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
     private void alterTableAddColumn(
             int tableNamePosition,
             TableToken tableToken,
-            TableRecordMetadata tableMetadata
+            TableMetadata tableMetadata
     ) throws SqlException {
         // add columns to table
         CharSequence tok = SqlUtil.fetchNext(lexer);
@@ -803,7 +803,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             TableToken tableToken,
             int columnNamePosition,
             CharSequence columnName,
-            TableRecordMetadata metadata,
+            TableMetadata metadata,
             int indexValueBlockSize
     ) throws SqlException {
         final int columnIndex = metadata.getColumnIndexQuiet(columnName);
@@ -837,7 +837,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             TableToken tableToken,
             int columnNamePosition,
             CharSequence columnName,
-            TableRecordMetadata metadata,
+            TableMetadata metadata,
             boolean cache
     ) throws SqlException {
         int columnIndex = metadata.getColumnIndexQuiet(columnName);
@@ -866,7 +866,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             TableToken tableToken,
             int columnNamePosition,
             CharSequence columnName,
-            TableRecordMetadata metadata
+            TableMetadata metadata
     ) throws SqlException {
         int columnIndex = metadata.getColumnIndexQuiet(columnName);
         if (columnIndex == -1) {
@@ -883,7 +883,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
         compiledQuery.ofAlter(alterOperationBuilder.build());
     }
 
-    private void alterTableDedupEnable(int tableNamePosition, TableToken tableToken, TableRecordMetadata tableMetadata, GenericLexer lexer) throws SqlException {
+    private void alterTableDedupEnable(int tableNamePosition, TableToken tableToken, TableMetadata tableMetadata, GenericLexer lexer) throws SqlException {
         if (!tableMetadata.isWalEnabled()) {
             throw SqlException.$(tableNamePosition, "deduplication is only supported for WAL tables");
         }
@@ -961,7 +961,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             SecurityContext securityContext,
             int tableNamePosition,
             TableToken tableToken,
-            TableRecordMetadata metadata
+            TableMetadata metadata
     ) throws SqlException {
         AlterOperationBuilder dropColumnStatement = alterOperationBuilder.ofDropColumn(tableNamePosition, tableToken, metadata.getTableId());
         int semicolonPos = -1;
@@ -998,7 +998,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
     }
 
     private void alterTableDropDetachOrAttachPartition(
-            TableRecordMetadata tableMetadata,
+            TableMetadata tableMetadata,
             TableToken tableToken,
             int action,
             SqlExecutionContext executionContext
@@ -1069,7 +1069,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
     }
 
     private void alterTableDropDetachOrAttachPartitionByList(
-            TableRecordMetadata tableMetadata,
+            TableMetadata tableMetadata,
             TableToken tableToken,
             @Nullable TableReader reader,
             int pos,
@@ -1136,7 +1136,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             SecurityContext securityContext,
             int tableNamePosition,
             TableToken tableToken,
-            TableRecordMetadata metadata
+            TableMetadata metadata
     ) throws SqlException {
         AlterOperationBuilder renameColumnStatement = alterOperationBuilder.ofRenameColumn(tableNamePosition, tableToken, metadata.getTableId());
         int hadSemicolonPos = -1;
@@ -1364,7 +1364,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             case ExecutionModel.UPDATE:
                 final QueryModel queryModel = (QueryModel) model;
                 TableToken tableToken = executionContext.getTableToken(queryModel.getTableName());
-                try (TableRecordMetadata metadata = executionContext.getMetadata(tableToken)) {
+                try (TableMetadata metadata = executionContext.getMetadata(tableToken)) {
                     optimiser.optimiseUpdate(queryModel, executionContext, metadata, this);
                     return model;
                 }
@@ -1451,7 +1451,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
             case ExecutionModel.UPDATE:
                 final QueryModel updateQueryModel = (QueryModel) executionModel;
                 TableToken tableToken = executionContext.getTableToken(updateQueryModel.getTableName());
-                try (TableRecordMetadata metadata = executionContext.getMetadata(tableToken)) {
+                try (TableMetadata metadata = executionContext.getMetadata(tableToken)) {
                     final UpdateOperation updateOperation = generateUpdate(updateQueryModel, executionContext, metadata);
                     compiledQuery.ofUpdate(updateOperation);
                 }
@@ -2001,7 +2001,7 @@ public class SqlCompilerImpl implements SqlCompiler, Closeable, SqlParserCallbac
         }
     }
 
-    private UpdateOperation generateUpdate(QueryModel updateQueryModel, SqlExecutionContext executionContext, TableRecordMetadata metadata) throws SqlException {
+    private UpdateOperation generateUpdate(QueryModel updateQueryModel, SqlExecutionContext executionContext, TableMetadata metadata) throws SqlException {
         TableToken updateTableToken = updateQueryModel.getUpdateTableToken();
         final QueryModel selectQueryModel = updateQueryModel.getNestedModel();
 

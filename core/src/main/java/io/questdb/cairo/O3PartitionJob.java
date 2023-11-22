@@ -26,7 +26,6 @@ package io.questdb.cairo;
 
 import io.questdb.MessageBus;
 import io.questdb.cairo.sql.RecordMetadata;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.api.MemoryCR;
 import io.questdb.cairo.vm.api.MemoryMA;
 import io.questdb.log.Log;

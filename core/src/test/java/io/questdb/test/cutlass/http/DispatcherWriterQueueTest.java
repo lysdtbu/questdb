@@ -27,7 +27,6 @@ package io.questdb.test.cutlass.http;
 import io.questdb.cairo.*;
 import io.questdb.cairo.sql.InvalidColumnException;
 import io.questdb.cairo.sql.OperationFuture;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.griffin.QueryFutureUpdateListener;
 import io.questdb.mp.SOCountDownLatch;
 import io.questdb.network.Net;

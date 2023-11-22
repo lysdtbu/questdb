@@ -32,7 +32,6 @@ import io.questdb.cairo.frm.FrameAlgebra;
 import io.questdb.cairo.frm.file.PartitionFrameFactory;
 import io.questdb.cairo.sql.AsyncWriterCommand;
 import io.questdb.cairo.sql.SymbolTable;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.sql.TableReferenceOutOfDateException;
 import io.questdb.cairo.vm.NullMapWriter;
 import io.questdb.cairo.vm.Vm;

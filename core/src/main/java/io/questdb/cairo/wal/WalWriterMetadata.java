@@ -29,22 +29,18 @@ import io.questdb.cairo.TableColumnMetadata;
 import io.questdb.cairo.TableToken;
 import io.questdb.cairo.TableUtils;
 import io.questdb.cairo.sql.RecordMetadata;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMARW;
 import io.questdb.cairo.vm.api.MemoryMR;
 import io.questdb.cairo.wal.seq.TableRecordMetadataSink;
-import io.questdb.std.FilesFacade;
-import io.questdb.std.LongList;
-import io.questdb.std.MemoryTag;
-import io.questdb.std.Misc;
+import io.questdb.std.*;
 import io.questdb.std.str.Path;
 
 import static io.questdb.cairo.TableUtils.META_FILE_NAME;
 import static io.questdb.cairo.TableUtils.openSmallFile;
 import static io.questdb.cairo.wal.WalUtils.WAL_FORMAT_VERSION;
 
-public class WalWriterMetadata extends AbstractRecordMetadata implements TableRecordMetadata, TableRecordMetadataSink {
+public class WalWriterMetadata extends AbstractRecordMetadata implements TableRecordMetadataSink, RecordMetadata, QuietCloseable {
     private final FilesFacade ff;
     private final MemoryMARW metaMem;
     private final MemoryMR roMetaMem;

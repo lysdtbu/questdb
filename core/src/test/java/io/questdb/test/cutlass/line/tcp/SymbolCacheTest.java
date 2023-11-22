@@ -26,7 +26,6 @@ package io.questdb.test.cutlass.line.tcp;
 
 import io.questdb.cairo.*;
 import io.questdb.cairo.sql.SymbolTable;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMR;
 import io.questdb.cutlass.line.tcp.DefaultLineTcpReceiverConfiguration;

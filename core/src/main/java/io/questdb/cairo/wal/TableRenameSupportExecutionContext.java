@@ -27,7 +27,6 @@ package io.questdb.cairo.wal;
 import io.questdb.cairo.CairoEngine;
 import io.questdb.cairo.TableReader;
 import io.questdb.cairo.TableToken;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.griffin.SqlExecutionContextImpl;
 import io.questdb.std.str.Path;
 

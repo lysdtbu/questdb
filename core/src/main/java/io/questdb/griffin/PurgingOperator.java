@@ -26,7 +26,6 @@ package io.questdb.griffin;
 
 import io.questdb.MessageBus;
 import io.questdb.cairo.*;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.log.Log;
 import io.questdb.mp.Sequence;
 import io.questdb.std.FilesFacade;

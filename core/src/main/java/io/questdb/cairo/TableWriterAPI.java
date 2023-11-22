@@ -24,7 +24,6 @@
 
 package io.questdb.cairo;
 
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.griffin.engine.ops.AlterOperation;
 import io.questdb.griffin.engine.ops.UpdateOperation;
 import org.jetbrains.annotations.NotNull;

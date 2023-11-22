@@ -26,7 +26,6 @@ package io.questdb.test.griffin.wal;
 
 import io.questdb.cairo.*;
 import io.questdb.cairo.sql.TableMetadata;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.api.MemoryR;
 import io.questdb.cairo.wal.ApplyWal2TableJob;
 import io.questdb.cairo.wal.CheckWalTransactionsJob;

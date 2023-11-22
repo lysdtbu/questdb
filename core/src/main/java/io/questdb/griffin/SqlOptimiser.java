@@ -962,7 +962,7 @@ public class SqlOptimiser implements Mutable {
         }
     }
 
-    private void copyColumnTypesFromMetadata(QueryModel model, TableRecordMetadata m) {
+    private void copyColumnTypesFromMetadata(QueryModel model, RecordMetadata m) {
         // TODO: optimise by copying column indexes, types of the columns used in SET clause in the UPDATE only
         for (int i = 0, k = m.getColumnCount(); i < k; i++) {
             model.addUpdateTableColumnMetadata(m.getColumnType(i), m.getColumnName(i));
@@ -1760,7 +1760,7 @@ public class SqlOptimiser implements Mutable {
         return qc;
     }
 
-    private void enumerateColumns(QueryModel model, TableRecordMetadata metadata) throws SqlException {
+    private void enumerateColumns(QueryModel model, RecordMetadata metadata) throws SqlException {
         model.setMetadataVersion(metadata.getMetadataVersion());
         model.setTableId(metadata.getTableId());
         copyColumnsFromMetadata(model, metadata, false);
@@ -2550,7 +2550,7 @@ public class SqlOptimiser implements Mutable {
 
         if (model.isUpdate() && !executionContext.isWalApplication()) {
             assert lo == 0;
-            try (TableRecordMetadata metadata = executionContext.getMetadata(tableToken)) {
+            try (TableMetadata metadata = executionContext.getMetadata(tableToken)) {
                 enumerateColumns(model, metadata);
             } catch (CairoException e) {
                 throw SqlException.position(tableNamePosition).put(e);
@@ -4967,7 +4967,7 @@ public class SqlOptimiser implements Mutable {
     void optimiseUpdate(
             QueryModel updateQueryModel,
             SqlExecutionContext sqlExecutionContext,
-            TableRecordMetadata metadata,
+            TableMetadata metadata,
             SqlParserCallback sqlParserCallback
     ) throws SqlException {
         final QueryModel selectQueryModel = updateQueryModel.getNestedModel();
@@ -4980,7 +4980,7 @@ public class SqlOptimiser implements Mutable {
         validateUpdateColumns(updateQueryModel, metadata, sqlExecutionContext);
     }
 
-    void validateUpdateColumns(QueryModel updateQueryModel, TableRecordMetadata metadata, SqlExecutionContext sqlExecutionContext) throws SqlException {
+    void validateUpdateColumns(QueryModel updateQueryModel, TableMetadata metadata, SqlExecutionContext sqlExecutionContext) throws SqlException {
         try {
             literalCollectorANames.clear();
             tempList.clear(metadata.getColumnCount());

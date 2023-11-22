@@ -3,7 +3,6 @@ package io.questdb.test.fuzz;
 import io.questdb.cairo.*;
 import io.questdb.cairo.security.AllowAllSecurityContext;
 import io.questdb.cairo.sql.RecordMetadata;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMARW;
 import io.questdb.log.Log;

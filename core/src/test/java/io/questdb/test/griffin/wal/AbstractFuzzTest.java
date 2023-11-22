@@ -25,7 +25,6 @@
 package io.questdb.test.griffin.wal;
 
 import io.questdb.cairo.*;
-import io.questdb.cairo.sql.TableRecordMetadata;
 import io.questdb.log.Log;
 import io.questdb.mp.WorkerPool;
 import io.questdb.std.Chars;

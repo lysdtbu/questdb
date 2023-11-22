@@ -27,7 +27,6 @@ package io.questdb.cairo.sql;
 import io.questdb.cairo.ColumnType;
 import io.questdb.cairo.ColumnTypes;
 import io.questdb.cairo.TableColumnMetadata;
-import io.questdb.cairo.TableDescriptor;
 import io.questdb.griffin.PlanSink;
 import io.questdb.griffin.Plannable;
 import io.questdb.std.str.CharSink;
@@ -39,7 +38,7 @@ import io.questdb.std.str.CharSink;
  * <p>
  * Types are defined in {@link io.questdb.cairo.ColumnType}
  */
-public interface RecordMetadata extends ColumnTypes, Plannable, TableDescriptor {
+public interface RecordMetadata extends ColumnTypes, Plannable {
 
     int COLUMN_NOT_FOUND = -1;
 
@@ -47,6 +46,8 @@ public interface RecordMetadata extends ColumnTypes, Plannable, TableDescriptor 
      * @return the number of columns in a record
      */
     int getColumnCount();
+
+    int getMetadataVersion();
 
     /**
      * Gets the numeric index of a column by name
@@ -114,47 +115,9 @@ public interface RecordMetadata extends ColumnTypes, Plannable, TableDescriptor 
     }
 
     /**
-     * The returned value defines how many row IDs to store in a single storage block on disk
-     * for an indexed column. Fewer blocks used to store row IDs achieves better performance.
-     *
-     * @param columnIndex numeric index of the column
-     * @return number of row IDs per block
-     */
-    int getIndexValueBlockCapacity(int columnIndex);
-
-    /**
-     * The returned value defines how many row IDs to store in a single storage block on disk
-     * for an indexed column. Fewer blocks used to store row IDs achieves better performance.
-     *
-     * @param columnName name of the column
-     * @return number of row IDs per block
-     */
-    default int getIndexValueBlockCapacity(CharSequence columnName) {
-        return getIndexValueBlockCapacity(getColumnIndex(columnName));
-    }
-
-    /**
-     * Access column metadata, i.e. getMetadata(1).getTimestampIndex()
-     *
-     * @param columnIndex numeric index of the column
-     * @return TableReaderMetadata
-     */
-    default RecordMetadata getMetadata(int columnIndex) {
-        return null;
-    }
-
-    /**
      * @return the numeric index of the designated timestamp column.
      */
     int getTimestampIndex();
-
-    /**
-     * Writing index for the column
-     *
-     * @param columnIndex column index
-     * @return writing index
-     */
-    int getWriterIndex(int columnIndex);
 
     /**
      * @param columnIndex column index
@@ -170,30 +133,9 @@ public interface RecordMetadata extends ColumnTypes, Plannable, TableDescriptor 
 
     /**
      * @param columnIndex numeric index of the column
-     * @return true if column is part of deduplication key used in inserts.
-     */
-    boolean isDedupKey(int columnIndex);
-
-    /**
-     * @param columnName name of the column
-     * @return true if symbol table is static, otherwise false.
-     */
-    default boolean isSymbolTableStatic(CharSequence columnName) {
-        return isSymbolTableStatic(getColumnIndex(columnName));
-    }
-
-    /**
-     * @param columnIndex numeric index of the column
      * @return true if symbol table is static, otherwise false.
      */
     boolean isSymbolTableStatic(int columnIndex);
-
-    /**
-     * @return true if the record is from WAL enabled table, otherwise false.
-     */
-    default boolean isWalEnabled() {
-        return false;
-    }
 
     /**
      * Create a JSON object with record metadata
@@ -217,7 +159,7 @@ public interface RecordMetadata extends ColumnTypes, Plannable, TableDescriptor 
             sink.putQuoted("type").put(':').putQuoted(ColumnType.nameOf(type));
             if (isColumnIndexed(i)) {
                 sink.put(',').putQuoted("indexed").put(":true");
-                sink.put(',').putQuoted("indexValueBlockCapacity").put(':').put(getIndexValueBlockCapacity(i));
+//                sink.put(',').putQuoted("indexValueBlockCapacity").put(':').put(getIndexValueBlockCapacity(i));
             }
             sink.put('}');
         }
