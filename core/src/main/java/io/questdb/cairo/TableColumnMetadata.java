@@ -24,21 +24,14 @@
 
 package io.questdb.cairo;
 
+import io.questdb.cairo.sql.ColumnMetadata;
 import io.questdb.cairo.sql.RecordMetadata;
-import io.questdb.griffin.PlanSink;
-import io.questdb.griffin.Plannable;
 import org.jetbrains.annotations.Nullable;
 
-public class TableColumnMetadata implements Plannable {
-    @Nullable
-    private final RecordMetadata metadata;
-    private final boolean symbolTableStatic;
+public class TableColumnMetadata extends ColumnMetadata {
     private final int writerIndex;
     private int indexValueBlockCapacity;
-    private boolean indexed;
     private boolean isDedupKey;
-    private String name;
-    private int type;
 
     public TableColumnMetadata(String name, int type) {
         this(name, type, null);
@@ -72,31 +65,14 @@ public class TableColumnMetadata implements Plannable {
             int writerIndex,
             boolean dedupKeyFlag
     ) {
-        this.name = name;
-        this.type = type;
-        this.indexed = indexed;
+        super(name, type, indexed, symbolTableStatic, metadata);
         this.indexValueBlockCapacity = indexValueBlockCapacity;
-        this.symbolTableStatic = symbolTableStatic;
-        this.metadata = GenericRecordMetadata.copyOf(metadata);
         this.writerIndex = writerIndex;
         this.isDedupKey = dedupKeyFlag;
     }
 
     public int getIndexValueBlockCapacity() {
         return indexValueBlockCapacity;
-    }
-
-    @Nullable
-    public RecordMetadata getMetadata() {
-        return metadata;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getType() {
-        return type;
     }
 
     public int getWriterIndex() {
@@ -108,19 +84,11 @@ public class TableColumnMetadata implements Plannable {
     }
 
     public boolean isDeleted() {
-        return type < 0;
-    }
-
-    public boolean isIndexed() {
-        return indexed;
-    }
-
-    public boolean isSymbolTableStatic() {
-        return symbolTableStatic;
+        return getColumnType() < 0;
     }
 
     public void markDeleted() {
-        type = -Math.abs(type);
+        columnType = -Math.abs(columnType);
     }
 
     public void setDedupKeyFlag(boolean dedupKeyFlag) {
@@ -129,18 +97,5 @@ public class TableColumnMetadata implements Plannable {
 
     public void setIndexValueBlockCapacity(int indexValueBlockCapacity) {
         this.indexValueBlockCapacity = indexValueBlockCapacity;
-    }
-
-    public void setIndexed(boolean value) {
-        indexed = value;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void toPlan(PlanSink sink) {
-        sink.val(name);
     }
 }

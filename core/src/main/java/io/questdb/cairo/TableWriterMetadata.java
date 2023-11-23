@@ -25,6 +25,7 @@
 package io.questdb.cairo;
 
 import io.questdb.cairo.sql.RecordMetadata;
+import io.questdb.cairo.sql.TableMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMR;
 import io.questdb.std.Chars;
@@ -32,7 +33,7 @@ import io.questdb.std.QuietCloseable;
 
 import static io.questdb.cairo.TableUtils.META_OFFSET_PARTITION_BY;
 
-public class TableWriterMetadata extends AbstractRecordMetadata implements TableStructure, RecordMetadata, QuietCloseable {
+public class TableWriterMetadata extends AbstractRecordMetadata implements TableMetadata, QuietCloseable {
     private int maxUncommittedRows;
     private long metadataVersion;
     private long o3MaxLag;

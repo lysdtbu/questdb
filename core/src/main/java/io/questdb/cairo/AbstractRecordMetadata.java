@@ -25,16 +25,32 @@
 package io.questdb.cairo;
 
 
+import io.questdb.cairo.sql.ColumnMetadata;
 import io.questdb.cairo.sql.RecordMetadata;
 import io.questdb.std.LowerCaseCharSequenceIntHashMap;
 import io.questdb.std.Mutable;
 import io.questdb.std.ObjList;
 
-public abstract class AbstractRecordMetadata implements RecordMetadata, Mutable {
-    protected final ObjList<TableColumnMetadata> columnMetadata = new ObjList<>();
+public abstract class AbstractRecordMetadata<T extends ColumnMetadata> implements RecordMetadata, Mutable {
+    protected final ObjList<T> columnMetadata = new ObjList<>();
     protected final LowerCaseCharSequenceIntHashMap columnNameIndexMap = new LowerCaseCharSequenceIntHashMap();
     protected int columnCount;
     protected int timestampIndex = -1;
+
+    public AbstractRecordMetadata<T> add(T meta) {
+        return add(columnCount, meta);
+    }
+
+    public AbstractRecordMetadata<T> add(int i, T meta) {
+        int index = columnNameIndexMap.keyIndex(meta.getColumnName());
+        if (index > -1) {
+            columnNameIndexMap.putAt(index, meta.getColumnName(), i);
+            columnMetadata.extendAndSet(i, meta);
+            columnCount++;
+            return this;
+        }
+        throw CairoException.duplicateColumn(meta.getColumnName());
+    }
 
     @Override
     public void clear() {
@@ -58,25 +74,26 @@ public abstract class AbstractRecordMetadata implements RecordMetadata, Mutable 
         return -1;
     }
 
-    @Override
-    public TableColumnMetadata getColumnMetadata(int index) {
+    public T getColumnMetadata(int index) {
         return columnMetadata.getQuick(index);
     }
 
     @Override
     public String getColumnName(int columnIndex) {
-        return getColumnMetadata(columnIndex).getName();
+        return getColumnMetadata(columnIndex).getColumnName();
     }
 
     @Override
     public int getColumnType(int columnIndex) {
-        return getColumnMetadata(columnIndex).getType();
+        return getColumnMetadata(columnIndex).getColumnType();
     }
 
-    @Override
-    public int getIndexValueBlockCapacity(int columnIndex) {
-        return getColumnMetadata(columnIndex).getIndexValueBlockCapacity();
-    }
+
+//    @Override
+//    public boolean hasColumn(int columnIndex) {
+//        final T columnMeta = columnMetadata.getQuiet(columnIndex);
+//        return columnMeta != null && !columnMeta.isDeleted();
+//    }
 
     @Override
     public RecordMetadata getMetadata(int columnIndex) {
@@ -89,24 +106,8 @@ public abstract class AbstractRecordMetadata implements RecordMetadata, Mutable 
     }
 
     @Override
-    public int getWriterIndex(int columnIndex) {
-        return getColumnMetadata(columnIndex).getWriterIndex();
-    }
-
-    @Override
-    public boolean hasColumn(int columnIndex) {
-        final TableColumnMetadata columnMeta = columnMetadata.getQuiet(columnIndex);
-        return columnMeta != null && !columnMeta.isDeleted();
-    }
-
-    @Override
     public boolean isColumnIndexed(int columnIndex) {
         return getColumnMetadata(columnIndex).isIndexed();
-    }
-
-    @Override
-    public boolean isDedupKey(int columnIndex) {
-        return getColumnMetadata(columnIndex).isDedupKey();
     }
 
     @Override

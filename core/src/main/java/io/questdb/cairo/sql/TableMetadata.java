@@ -28,6 +28,18 @@ import io.questdb.cairo.TableToken;
 import io.questdb.std.QuietCloseable;
 
 public interface TableMetadata extends RecordMetadata, QuietCloseable {
+    int getIndexBlockCapacity(int columnIndex);
+
+    boolean getSymbolCacheFlag(int columnIndex);
+
+    int getSymbolCapacity(int columnIndex);
+
+    CharSequence getTableName();
+
+    boolean isIndexed(int columnIndex);
+
+    boolean isSequential(int columnIndex);
+
     /**
      * The returned value defines how many row IDs to store in a single storage block on disk
      * for an indexed column. Fewer blocks used to store row IDs achieves better performance.

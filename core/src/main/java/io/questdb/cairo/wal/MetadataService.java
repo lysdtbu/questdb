@@ -25,6 +25,7 @@
 package io.questdb.cairo.wal;
 
 import io.questdb.cairo.*;
+import io.questdb.cairo.sql.TableMetadata;
 import io.questdb.std.LongList;
 import org.jetbrains.annotations.NotNull;
 
@@ -100,7 +101,7 @@ public interface MetadataService {
 
     long getMetaO3MaxLag();
 
-    TableRecordMetadata getMetadata();
+    TableMetadata getMetadata();
 
     int getPartitionBy();
 

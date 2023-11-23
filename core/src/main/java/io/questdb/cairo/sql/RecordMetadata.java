@@ -26,7 +26,6 @@ package io.questdb.cairo.sql;
 
 import io.questdb.cairo.ColumnType;
 import io.questdb.cairo.ColumnTypes;
-import io.questdb.cairo.TableColumnMetadata;
 import io.questdb.griffin.PlanSink;
 import io.questdb.griffin.Plannable;
 import io.questdb.std.str.CharSink;
@@ -46,8 +45,6 @@ public interface RecordMetadata extends ColumnTypes, Plannable {
      * @return the number of columns in a record
      */
     int getColumnCount();
-
-    int getMetadataVersion();
 
     /**
      * Gets the numeric index of a column by name
@@ -85,8 +82,6 @@ public interface RecordMetadata extends ColumnTypes, Plannable {
      */
     int getColumnIndexQuiet(CharSequence columnName, int lo, int hi);
 
-    TableColumnMetadata getColumnMetadata(int columnIndex);
-
     /**
      * Retrieves column name.
      *
@@ -114,16 +109,12 @@ public interface RecordMetadata extends ColumnTypes, Plannable {
         return getColumnType(getColumnIndex(columnName));
     }
 
+    RecordMetadata getMetadata(int columnIndex);
+
     /**
      * @return the numeric index of the designated timestamp column.
      */
     int getTimestampIndex();
-
-    /**
-     * @param columnIndex column index
-     * @return true if the column with the given column index is present, otherwise false.
-     */
-    boolean hasColumn(int columnIndex);
 
     /**
      * @param columnIndex numeric index of the column

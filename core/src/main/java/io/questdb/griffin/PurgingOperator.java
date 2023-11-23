@@ -26,6 +26,7 @@ package io.questdb.griffin;
 
 import io.questdb.MessageBus;
 import io.questdb.cairo.*;
+import io.questdb.cairo.sql.TableMetadata;
 import io.questdb.log.Log;
 import io.questdb.mp.Sequence;
 import io.questdb.std.FilesFacade;
@@ -66,7 +67,7 @@ public final class PurgingOperator {
         cleanupColumnVersions.clear();
     }
 
-    public void purge(Path path, TableToken tableToken, int partitionBy, boolean asyncOnly, TableRecordMetadata tableMetadata, long truncateVersion, long txn) {
+    public void purge(Path path, TableToken tableToken, int partitionBy, boolean asyncOnly, TableMetadata tableMetadata, long truncateVersion, long txn) {
         int rootLen = path.size();
 
         try {

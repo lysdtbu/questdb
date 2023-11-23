@@ -24,21 +24,22 @@
 
 package io.questdb.cairo;
 
+import io.questdb.cairo.sql.ColumnMetadata;
 import io.questdb.cairo.sql.RecordMetadata;
 
-public class GenericRecordMetadata extends AbstractRecordMetadata {
+public class GenericRecordMetadata extends AbstractRecordMetadata<ColumnMetadata> {
 
     /**
      * This method will throw duplicate column exception when called on table writer metadata in case
      * if it has deleted and re-created columns.
      */
-    public static void copyColumns(RecordMetadata from, GenericRecordMetadata to) {
+    public static void copyColumns(AbstractRecordMetadata<ColumnMetadata> from, GenericRecordMetadata to) {
         for (int i = 0, n = from.getColumnCount(); i < n; i++) {
             to.add(from.getColumnMetadata(i));
         }
     }
 
-    public static GenericRecordMetadata copyDense(TableRecordMetadata tableMetadata) {
+    public static GenericRecordMetadata copyDense(RecordMetadata tableMetadata) {
         GenericRecordMetadata metadata = new GenericRecordMetadata();
         int columnCount = tableMetadata.getColumnCount();
         int timestampIndex = tableMetadata.getTimestampIndex();
@@ -106,20 +107,6 @@ public class GenericRecordMetadata extends AbstractRecordMetadata {
         return that;
     }
 
-    public GenericRecordMetadata add(TableColumnMetadata meta) {
-        return add(columnCount, meta);
-    }
-
-    public GenericRecordMetadata add(int i, TableColumnMetadata meta) {
-        int index = columnNameIndexMap.keyIndex(meta.getName());
-        if (index > -1) {
-            columnNameIndexMap.putAt(index, meta.getName(), i);
-            columnMetadata.extendAndSet(i, meta);
-            columnCount++;
-            return this;
-        }
-        throw CairoException.duplicateColumn(meta.getName());
-    }
 
     public void setTimestampIndex(int index) {
         this.timestampIndex = index;

@@ -24,6 +24,7 @@
 
 package io.questdb.cairo;
 
+import io.questdb.cairo.sql.TableMetadata;
 import io.questdb.griffin.engine.ops.AlterOperation;
 import io.questdb.griffin.engine.ops.UpdateOperation;
 import org.jetbrains.annotations.NotNull;
@@ -88,7 +89,7 @@ public interface TableWriterAPI extends Closeable {
 
     long commit();
 
-    TableRecordMetadata getMetadata();
+    TableMetadata getMetadata();
 
     /**
      * Returns table structure version. Implementations must be thread-safe.

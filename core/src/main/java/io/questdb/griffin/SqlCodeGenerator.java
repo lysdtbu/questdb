@@ -4051,7 +4051,7 @@ public class SqlCodeGenerator implements Mutable, Closeable {
 
         final TableToken tableToken = executionContext.getTableToken(tab);
         if (model.isUpdate() && !executionContext.isWalApplication() && executionContext.getCairoEngine().isWalTable(tableToken)) {
-            try (TableRecordMetadata metadata = engine.getMetadata(tableToken, model.getMetadataVersion())) {
+            try (TableMetadata metadata = engine.getMetadata(tableToken, model.getMetadataVersion())) {
                 return generateTableQuery0(model, executionContext, latestBy, supportsRandomAccess, null, metadata);
             }
         } else {
@@ -4067,7 +4067,7 @@ public class SqlCodeGenerator implements Mutable, Closeable {
             ObjList<ExpressionNode> latestBy,
             boolean supportsRandomAccess,
             @Transient @Nullable TableReader reader,
-            @Transient TableRecordMetadata metadata
+            @Transient TableMetadata metadata
     ) throws SqlException {
         // create metadata based on top-down columns that are required
 

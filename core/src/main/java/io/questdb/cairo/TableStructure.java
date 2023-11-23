@@ -26,25 +26,4 @@ package io.questdb.cairo;
 
 public interface TableStructure extends TableDescriptor {
 
-    int getIndexBlockCapacity(int columnIndex);
-
-    int getMaxUncommittedRows();
-
-    long getO3MaxLag();
-
-    int getPartitionBy();
-
-    boolean getSymbolCacheFlag(int columnIndex);
-
-    int getSymbolCapacity(int columnIndex);
-
-    CharSequence getTableName();
-
-    boolean isDedupKey(int columnIndex);
-
-    boolean isIndexed(int columnIndex);
-
-    boolean isSequential(int columnIndex);
-
-    boolean isWalEnabled();
 }

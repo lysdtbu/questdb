@@ -29,6 +29,7 @@ import io.questdb.cairo.TableColumnMetadata;
 import io.questdb.cairo.TableToken;
 import io.questdb.cairo.TableUtils;
 import io.questdb.cairo.sql.RecordMetadata;
+import io.questdb.cairo.sql.TableMetadata;
 import io.questdb.cairo.vm.Vm;
 import io.questdb.cairo.vm.api.MemoryMARW;
 import io.questdb.cairo.vm.api.MemoryMR;
@@ -40,7 +41,7 @@ import static io.questdb.cairo.TableUtils.META_FILE_NAME;
 import static io.questdb.cairo.TableUtils.openSmallFile;
 import static io.questdb.cairo.wal.WalUtils.WAL_FORMAT_VERSION;
 
-public class WalWriterMetadata extends AbstractRecordMetadata implements TableRecordMetadataSink, RecordMetadata, QuietCloseable {
+public class WalWriterMetadata extends AbstractRecordMetadata implements TableRecordMetadataSink, TableMetadata {
     private final FilesFacade ff;
     private final MemoryMARW metaMem;
     private final MemoryMR roMetaMem;
