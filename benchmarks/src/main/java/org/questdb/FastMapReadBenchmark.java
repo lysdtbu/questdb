@@ -38,16 +38,17 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class FastMapReadBenchmark {
 
-    private static final int N = 5_000_000;
-    private static final double loadFactor = 0.7;
+    private static final int N = 50_000_000;
+    private static final double loadFactor = 0.95;
     private static final HashMap<String, Long> hmap = new HashMap<>(N, (float) loadFactor);
     private static final FastMap fmap = new FastMap(1024 * 1024, new SingleColumnType(ColumnType.STRING), new SingleColumnType(ColumnType.LONG), N, loadFactor, 1024);
     private static final CompactMap qmap = new CompactMap(1024 * 1024, new SingleColumnType(ColumnType.STRING), new SingleColumnType(ColumnType.LONG), N, loadFactor, 1024, Integer.MAX_VALUE);
@@ -65,17 +66,17 @@ public class FastMapReadBenchmark {
         new Runner(opt).run();
     }
 
-    @Benchmark
+    //    @Benchmark
     public int baseline() {
         return rnd.nextInt(N);
     }
 
     @Setup(Level.Iteration)
     public void reset() {
-        System.out.print(" [q=" + qmap.size() + ", l=" + fmap.size() + ", cap=" + qmap.getKeyCapacity() + "] ");
+        System.out.print(" [q=" + qmap.size() + ", l=" + fmap.size() + ", cap=" + qmap.getKeyCapacity() + ", chainLen=" + Arrays.toString(fmap.getChainLenDistribution()) + "] ");
     }
 
-    @Benchmark
+    //    @Benchmark
     public MapValue testCompactMap() {
         MapKey key = qmap.withKey();
         sink.clear();
@@ -93,18 +94,18 @@ public class FastMapReadBenchmark {
         return key.findValue();
     }
 
-    @Benchmark
+    //    @Benchmark
     public Long testHashMap() {
         return hmap.get(String.valueOf(rnd.nextInt(N)));
     }
 
     static {
-        for (int i = 0; i < N; i++) {
-            MapKey key = qmap.withKey();
-            key.putStr(String.valueOf(i));
-            MapValue value = key.createValue();
-            value.putLong(0, i);
-        }
+//        for (int i = 0; i < N; i++) {
+//            MapKey key = qmap.withKey();
+//            key.putStr(String.valueOf(i));
+//            MapValue value = key.createValue();
+//            value.putLong(0, i);
+//        }
 
         for (int i = 0; i < N; i++) {
             MapKey key = fmap.withKey();
@@ -112,9 +113,12 @@ public class FastMapReadBenchmark {
             MapValue values = key.createValue();
             values.putLong(0, i);
         }
+//        System.out.println(Arrays.toString(fmap.getChainLenDistribution()));
+        System.out.println(Arrays.toString(fmap.getDistributions()));
+        System.out.println("---starting---");
 
-        for (int i = 0; i < N; i++) {
-            hmap.put(String.valueOf(i), (long) i);
-        }
+//        for (int i = 0; i < N; i++) {
+//            hmap.put(String.valueOf(i), (long) i);
+//        }
     }
 }

@@ -160,6 +160,42 @@ public class FastMapTest extends AbstractCairoTest {
     }
 
     @Test
+    public void testIntKey() {
+        Rnd rnd = new Rnd();
+
+        ArrayColumnTypes keyTypes = new ArrayColumnTypes();
+        keyTypes.add(ColumnType.INT);
+
+        ArrayColumnTypes valueTypes = new ArrayColumnTypes();
+        valueTypes.add(ColumnType.INT);
+
+        try (FastMap map = new FastMap(1024, keyTypes, valueTypes, 2, 0.8, 24)) {
+            final int N = 100;
+            for (int i = 0; i < N; i++) {
+                MapKey key = map.withKey();
+                key.putInt(i);
+
+                MapValue value = key.createValue();
+                Assert.assertTrue(value.isNew());
+
+                value.putInt(0, rnd.nextInt());
+            }
+
+            rnd.reset();
+
+            // assert that all values are good
+            for (int i = 0; i < N; i++) {
+                MapKey key = map.withKey();
+                key.putInt(i);
+
+                MapValue value = key.createValue();
+                Assert.assertFalse(value.isNew());
+                Assert.assertEquals(rnd.nextInt(), value.getInt(0));
+            }
+        }
+    }
+
+    @Test
     public void testAllTypesReverseColumnAccess() {
         ArrayColumnTypes keyTypes = new ArrayColumnTypes();
         keyTypes.add(ColumnType.BYTE);

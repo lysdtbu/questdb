@@ -103,6 +103,7 @@ public class FastMap implements Map, Reopenable {
     // Offsets are shifted by +1 (0 -> 1, 1 -> 2, etc.), so that we fill the memory with 0.
     private DirectLongList offsets;
     private int size = 0;
+    private int[] chainLenDistribution;
 
     public FastMap(
             int pageSize,
@@ -112,6 +113,17 @@ public class FastMap implements Map, Reopenable {
             int maxResizes
     ) {
         this(pageSize, keyTypes, null, keyCapacity, loadFactor, maxResizes);
+    }
+
+    private void recordChainLen(int chainLen) {
+        if (chainLenDistribution == null) {
+            chainLenDistribution = new int[128];
+        }
+        if (chainLen < chainLenDistribution.length) {
+            chainLenDistribution[chainLen]++;
+        } else {
+            chainLenDistribution[chainLenDistribution.length - 1]++;
+        }
     }
 
     public FastMap(
@@ -327,7 +339,7 @@ public class FastMap implements Map, Reopenable {
     }
 
     private static long unpackOffset(long packedOffset) {
-        return (Integer.toUnsignedLong(Numbers.decodeLowInt(packedOffset)) - 1) << 3;
+        return ((packedOffset & 0xffffffffL) - 1) << 3;
     }
 
     private FastMapValue asNew(BaseKey keyWriter, int index, int hashCode, FastMapValue value) {
@@ -345,26 +357,68 @@ public class FastMap implements Map, Reopenable {
         return valueOf(keyWriter.startAddress, keyWriter.appendAddress, true, value);
     }
 
-    private FastMapValue probe0(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
-        long packedOffset;
-        long offset;
-        while ((offset = unpackOffset(packedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
-            if (hashCode == unpackHashCode(packedOffset) && keyWriter.eq(offset)) {
-                long startAddress = heapStart + offset;
-                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
+    private void relocatePackedOffset(long relocatedPackedOffset, int index, int probeSeqLen) {
+        long candidateVictim;
+        while (unpackOffset(candidateVictim = getPackedOffset(offsets, index = (++index & mask))) > -1) {
+            probeSeqLen++;
+            int victimEntryHashCode = unpackHashCode(candidateVictim);
+            int victimProbeSeqLen = getProbeSequenceLength(victimEntryHashCode, index);
+            if (victimProbeSeqLen < probeSeqLen) {
+                setPackedOffset(offsets, index, relocatedPackedOffset);
+                relocatedPackedOffset = candidateVictim;
+                probeSeqLen = victimProbeSeqLen;
             }
         }
+        setPackedOffset(offsets, index, relocatedPackedOffset);
+    }
+
+    private FastMapValue probeReadWrite(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
+        long heapEntryPackedOffset;
+        long offset;
+        int currentSeqLen = 1;
+        while ((offset = unpackOffset(heapEntryPackedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
+            int heapEntryHashCode = unpackHashCode(heapEntryPackedOffset);
+            if (hashCode == heapEntryHashCode && keyWriter.eq(offset)) {
+                long startAddress = heapStart + offset;
+                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
+            } else {
+                int currentSeqLen2 = getProbeSequenceLength(heapEntryHashCode, index);
+                if (currentSeqLen2 < currentSeqLen) {
+                    FastMapValue newVal = asNew(keyWriter, index, hashCode, value);
+                    relocatePackedOffset(heapEntryPackedOffset, index, currentSeqLen2);
+                    return newVal;
+                }
+            }
+            currentSeqLen++;
+        }
         return asNew(keyWriter, index, hashCode, value);
+    }
+
+    private int getProbeSequenceLength(int hash, int actualIndex) {
+        int idealIndex = hash & mask;
+        int distance = actualIndex - idealIndex;
+
+        // Adjust for wrap-around.
+        // If distance is negative, add tableSize, otherwise add 0.
+        distance += (keyCapacity & -(distance >>> 31));
+        return distance;
+    }
+
+    public int[] getChainLenDistribution() {
+        return chainLenDistribution;
     }
 
     private FastMapValue probeReadOnly(BaseKey keyWriter, int index, long hashCode, int keySize, FastMapValue value) {
         long packedOffset;
         long offset;
+        int chainLen = 1;
         while ((offset = unpackOffset(packedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
             if (hashCode == unpackHashCode(packedOffset) && keyWriter.eq(offset)) {
                 long startAddress = heapStart + offset;
+                recordChainLen(chainLen);
                 return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
             }
+            chainLen++;
         }
         return null;
     }
@@ -502,7 +556,7 @@ public class FastMap implements Map, Reopenable {
                 long startAddress = heapStart + offset;
                 return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
             } else {
-                return probe0(this, index, hashCode, keySize, value);
+                return probeReadWrite(this, index, hashCode, keySize, value);
             }
         }
 
@@ -516,6 +570,7 @@ public class FastMap implements Map, Reopenable {
             if (offset < 0) {
                 return null;
             } else if (hashCode == unpackHashCode(packedOffset) && eq(offset)) {
+                recordChainLen(0);
                 long startAddress = heapStart + offset;
                 return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
             } else {
@@ -851,7 +906,7 @@ public class FastMap implements Map, Reopenable {
             long a = heapStart + offset;
             long b = startAddress;
             // Check the length first.
-            if (Unsafe.getUnsafe().getInt(a) != Unsafe.getUnsafe().getInt(b)) {
+            if (Unsafe.getUnsafe().getInt(a) != len) {
                 return false;
             }
             return Vect.memeq(a + keyOffset, b + keyOffset, len);
@@ -861,5 +916,19 @@ public class FastMap implements Map, Reopenable {
         protected int hash() {
             return Hash.hashMem32(startAddress + keyOffset, len);
         }
+    }
+
+    public int[] getDistributions() {
+        int[] dist = new int[32];
+        for (int i = 0; i < keyCapacity; i++) {
+            long packedOffset = getPackedOffset(offsets, i);
+            long offset = unpackOffset(packedOffset);
+            if (offset < 0) {
+                continue;
+            }
+            int probeSequenceLength = getProbeSequenceLength(unpackHashCode(packedOffset), i);
+            dist[probeSequenceLength]++;
+        }
+        return dist;
     }
 }
