@@ -394,6 +394,19 @@ public class FastMap implements Map, Reopenable {
         return asNew(keyWriter, index, hashCode, value);
     }
 
+//    private FastMapValue probeReadWrite(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
+//        long heapEntryPackedOffset;
+//        long offset;
+//        while ((offset = unpackOffset(heapEntryPackedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
+//            int heapEntryHashCode = unpackHashCode(heapEntryPackedOffset);
+//            if (hashCode == heapEntryHashCode && keyWriter.eq(offset)) {
+//                long startAddress = heapStart + offset;
+//                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
+//            }
+//        }
+//        return asNew(keyWriter, index, hashCode, value);
+//    }
+
     private int getProbeSequenceLength(int hash, int actualIndex) {
         int idealIndex = hash & mask;
         int distance = actualIndex - idealIndex;
@@ -928,6 +941,17 @@ public class FastMap implements Map, Reopenable {
             }
             int probeSequenceLength = getProbeSequenceLength(unpackHashCode(packedOffset), i);
             dist[probeSequenceLength]++;
+        }
+        return dist;
+    }
+
+    public int[] getDistances() {
+        int[] dist = new int[keyCapacity];
+        for (int i = 0; i < keyCapacity; i++) {
+            long packedOffset = getPackedOffset(offsets, i);
+            long offset = unpackOffset(packedOffset);
+            int val = offset < 0 ? -1 : getProbeSequenceLength(unpackHashCode(packedOffset), i);
+            dist[i] = val;
         }
         return dist;
     }

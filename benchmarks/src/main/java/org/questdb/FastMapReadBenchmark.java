@@ -33,7 +33,6 @@ import io.questdb.cairo.map.MapValue;
 import io.questdb.std.Rnd;
 import io.questdb.std.str.StringSink;
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
@@ -47,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class FastMapReadBenchmark {
 
-    private static final int N = 50_000_000;
+    private static final int N = 1_000_000;
     private static final double loadFactor = 0.95;
     private static final HashMap<String, Long> hmap = new HashMap<>(N, (float) loadFactor);
     private static final FastMap fmap = new FastMap(1024 * 1024, new SingleColumnType(ColumnType.STRING), new SingleColumnType(ColumnType.LONG), N, loadFactor, 1024);
@@ -63,7 +62,7 @@ public class FastMapReadBenchmark {
                 .forks(1)
                 .build();
 
-        new Runner(opt).run();
+//        new Runner(opt).run();
     }
 
     //    @Benchmark
@@ -114,7 +113,9 @@ public class FastMapReadBenchmark {
             values.putLong(0, i);
         }
 //        System.out.println(Arrays.toString(fmap.getChainLenDistribution()));
-        System.out.println(Arrays.toString(fmap.getDistributions()));
+//        System.out.println(Arrays.toString(fmap.getDistributions()));
+        int[] distances = fmap.getDistances();
+        HeatmapUtils.writeToPngFile(distances, "distances.png");
         System.out.println("---starting---");
 
 //        for (int i = 0; i < N; i++) {
