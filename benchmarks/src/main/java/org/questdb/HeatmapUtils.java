@@ -16,15 +16,15 @@ public class HeatmapUtils {
         writeToPngFile(values, "heatmap.png");
     }
 
-    public static void writeToPngFile(int[] values, String filename) {
-        int width = (int) Math.sqrt(values.length);
-        int height = values.length / width + (values.length % width == 0 ? 0 : 1);
+    public static void writeToPngFile(int[] slotShifts, String filename) {
+        int width = (int) Math.sqrt(slotShifts.length);
+        int height = slotShifts.length / width + (slotShifts.length % width == 0 ? 0 : 1);
         int[] pixels = new int[width * height];
-        int max = getMaxValue(values);
+        int maxShift = getMaxValue(slotShifts);
 //        if (max > MAX) {
 //            throw new IllegalArgumentException("Max value is " + max + ", but max value for heatmap is " + MAX);
 //        }
-        max = 80;
+        maxShift = 80; // use the same colour scale for both linear probing and robin hood
 
         int grayColor = 0xff888888;
         int[] greenColor = {0, 255, 0};
@@ -34,12 +34,12 @@ public class HeatmapUtils {
         int[] endColor = blackColor;
 
 
-        for (int i = 0; i < values.length; i++) {
-            int val = values[i];
-            if (val == -1) {
-                pixels[i] = 0xffffffff; // white
+        for (int i = 0; i < slotShifts.length; i++) {
+            int shift = slotShifts[i];
+            if (shift == -1) {
+                pixels[i] = 0xffffffff; // empty slot -> white
             } else {
-                int[] interpolatedColor = HeatmapUtils.logInterpolateColor(startColor, endColor, 0, max, val);
+                int[] interpolatedColor = HeatmapUtils.logInterpolateColor(startColor, endColor, maxShift, shift);
                 pixels[i] = 0xff000000 | (interpolatedColor[0] << 16) | (interpolatedColor[1] << 8) | interpolatedColor[2];
             }
         }
@@ -47,19 +47,16 @@ public class HeatmapUtils {
         writeToPngFile2(pixels, width, height, filename);
     }
 
-    public static int[] logInterpolateColor(int[] colorStart, int[] colorEnd, int minimum, int maximum, int value) {
+    public static int[] logInterpolateColor(int[] colorStart, int[] colorEnd, int maximum, int value) {
         // Adjust for values outside the range
-        if (value < minimum) {
-            value = minimum;
-        }
         if (value > maximum) {
             value = maximum;
         }
 
         // Calculate the logarithmic ratio
-        double logMin = Math.log1p(minimum - minimum + 1); // Avoid log(0) which is undefined
-        double logMax = Math.log1p(maximum - minimum + 1);
-        double logValue = Math.log1p(value - minimum + 1);
+        double logMin = Math.log1p(1); // Avoid log(0) which is undefined
+        double logMax = Math.log1p(maximum + 1);
+        double logValue = Math.log1p(value + 1);
         float ratio = (float) ((logValue - logMin) / (logMax - logMin));
 
         // Interpolate each color component
