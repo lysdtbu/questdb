@@ -104,6 +104,7 @@ public class FastMap implements Map, Reopenable {
     private DirectLongList offsets;
     private int size = 0;
     private int[] chainLenDistribution;
+    private int maxSeqLen = 0;
 
     public FastMap(
             int pageSize,
@@ -366,53 +367,57 @@ public class FastMap implements Map, Reopenable {
             if (victimProbeSeqLen < probeSeqLen) {
                 setPackedOffset(offsets, index, relocatedPackedOffset);
                 relocatedPackedOffset = candidateVictim;
+                maxSeqLen = Math.max(maxSeqLen, probeSeqLen);
                 probeSeqLen = victimProbeSeqLen;
             }
         }
+        maxSeqLen = Math.max(maxSeqLen, probeSeqLen);
         setPackedOffset(offsets, index, relocatedPackedOffset);
+    }
+
+    private FastMapValue probeReadWrite(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
+        long heapEntryPackedOffset;
+        long offset;
+        int currentSeqLen = 1;
+        while ((offset = unpackOffset(heapEntryPackedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
+            int heapEntryHashCode = unpackHashCode(heapEntryPackedOffset);
+            if (hashCode == heapEntryHashCode && keyWriter.eq(offset)) {
+                long startAddress = heapStart + offset;
+                maxSeqLen = Math.max(maxSeqLen, currentSeqLen);
+                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
+            } else {
+                int victimSeqLen = getProbeSequenceLength(heapEntryHashCode, index);
+                if (victimSeqLen < currentSeqLen) {
+                    maxSeqLen = Math.max(maxSeqLen, currentSeqLen);
+                    FastMapValue newVal = asNew(keyWriter, index, hashCode, value);
+                    relocatePackedOffset(heapEntryPackedOffset, index, victimSeqLen);
+                    return newVal;
+                }
+            }
+            currentSeqLen++;
+        }
+        return asNew(keyWriter, index, hashCode, value);
     }
 
 //    private FastMapValue probeReadWrite(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
 //        long heapEntryPackedOffset;
 //        long offset;
-//        int currentSeqLen = 1;
 //        while ((offset = unpackOffset(heapEntryPackedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
 //            int heapEntryHashCode = unpackHashCode(heapEntryPackedOffset);
 //            if (hashCode == heapEntryHashCode && keyWriter.eq(offset)) {
 //                long startAddress = heapStart + offset;
 //                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
-//            } else {
-//                int currentSeqLen2 = getProbeSequenceLength(heapEntryHashCode, index);
-//                if (currentSeqLen2 < currentSeqLen) {
-//                    FastMapValue newVal = asNew(keyWriter, index, hashCode, value);
-//                    relocatePackedOffset(heapEntryPackedOffset, index, currentSeqLen2);
-//                    return newVal;
-//                }
 //            }
-//            currentSeqLen++;
 //        }
 //        return asNew(keyWriter, index, hashCode, value);
 //    }
-
-    private FastMapValue probeReadWrite(BaseKey keyWriter, int index, int hashCode, int keySize, FastMapValue value) {
-        long heapEntryPackedOffset;
-        long offset;
-        while ((offset = unpackOffset(heapEntryPackedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
-            int heapEntryHashCode = unpackHashCode(heapEntryPackedOffset);
-            if (hashCode == heapEntryHashCode && keyWriter.eq(offset)) {
-                long startAddress = heapStart + offset;
-                return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
-            }
-        }
-        return asNew(keyWriter, index, hashCode, value);
-    }
 
     private int getProbeSequenceLength(int hash, int actualIndex) {
         int idealIndex = hash & mask;
         int distance = actualIndex - idealIndex;
 
         // Adjust for wrap-around.
-        // If distance is negative, add tableSize, otherwise add 0.
+        // If distance is negative, add keyCapacity, otherwise add 0.
         distance += (keyCapacity & -(distance >>> 31));
         return distance;
     }
@@ -425,10 +430,10 @@ public class FastMap implements Map, Reopenable {
         long packedOffset;
         long offset;
         int chainLen = 1;
-        while ((offset = unpackOffset(packedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
+        while (chainLen <= maxSeqLen && (offset = unpackOffset(packedOffset = getPackedOffset(offsets, index = (++index & mask)))) > -1) {
             if (hashCode == unpackHashCode(packedOffset) && keyWriter.eq(offset)) {
                 long startAddress = heapStart + offset;
-                recordChainLen(chainLen);
+//                recordChainLen(chainLen);
                 return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
             }
             chainLen++;
@@ -583,7 +588,7 @@ public class FastMap implements Map, Reopenable {
             if (offset < 0) {
                 return null;
             } else if (hashCode == unpackHashCode(packedOffset) && eq(offset)) {
-                recordChainLen(0);
+//                recordChainLen(0);
                 long startAddress = heapStart + offset;
                 return valueOf(startAddress, startAddress + keyOffset + keySize, false, value);
             } else {

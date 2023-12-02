@@ -45,8 +45,8 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class FastMapReadLongBenchmark {
 
-    private static final int N = 5_000_000;
-    private static final double loadFactor = 0.7;
+    private static final int N = 100_000_000;
+    private static final double loadFactor = 0.8;
     private static final HashMap<Long, Long> hmap = new HashMap<>(N, (float) loadFactor);
     private static final FastMap fmap = new FastMap(1024 * 1024, new SingleColumnType(ColumnType.LONG), new SingleColumnType(ColumnType.LONG), N, loadFactor, 1024);
     private static final CompactMap cmap = new CompactMap(1024 * 1024, new SingleColumnType(ColumnType.LONG), new SingleColumnType(ColumnType.LONG), N, loadFactor, 1024, Integer.MAX_VALUE);
@@ -57,13 +57,13 @@ public class FastMapReadLongBenchmark {
                 .include(FastMapReadLongBenchmark.class.getSimpleName())
                 .warmupIterations(3)
                 .measurementIterations(3)
-                .forks(1)
+                .forks(0)
                 .build();
 
         new Runner(opt).run();
     }
 
-    @Benchmark
+    //    @Benchmark
     public long baseline() {
         return rnd.nextLong(N);
     }
@@ -73,7 +73,7 @@ public class FastMapReadLongBenchmark {
         System.out.print(" [q=" + cmap.size() + ", l=" + fmap.size() + ", cap=" + cmap.getKeyCapacity() + "] ");
     }
 
-    @Benchmark
+    //    @Benchmark
     public MapValue testCompactMap() {
         MapKey key = cmap.withKey();
         key.putLong(rnd.nextLong(N));
@@ -83,22 +83,22 @@ public class FastMapReadLongBenchmark {
     @Benchmark
     public MapValue testFastMap() {
         MapKey key = fmap.withKey();
-        key.putLong(rnd.nextLong(N));
+        key.putLong(rnd.nextLong(N * 2));
         return key.findValue();
     }
 
-    @Benchmark
+    //    @Benchmark
     public Long testHashMap() {
         return hmap.get(rnd.nextLong(N));
     }
 
     static {
-        for (int i = 0; i < N; i++) {
-            MapKey key = cmap.withKey();
-            key.putLong(i);
-            MapValue value = key.createValue();
-            value.putLong(0, i);
-        }
+//        for (int i = 0; i < N; i++) {
+//            MapKey key = cmap.withKey();
+//            key.putLong(i);
+//            MapValue value = key.createValue();
+//            value.putLong(0, i);
+//        }
 
         for (int i = 0; i < N; i++) {
             MapKey key = fmap.withKey();
@@ -107,8 +107,8 @@ public class FastMapReadLongBenchmark {
             values.putLong(0, i);
         }
 
-        for (long i = 0; i < N; i++) {
-            hmap.put(i, i);
-        }
+//        for (long i = 0; i < N; i++) {
+//            hmap.put(i, i);
+//        }
     }
 }
