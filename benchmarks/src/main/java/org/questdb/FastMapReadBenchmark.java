@@ -37,7 +37,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -72,7 +71,7 @@ public class FastMapReadBenchmark {
 
     @Setup(Level.Iteration)
     public void reset() {
-        System.out.print(" [q=" + qmap.size() + ", l=" + fmap.size() + ", cap=" + qmap.getKeyCapacity() + ", chainLen=" + Arrays.toString(fmap.getChainLenDistribution()) + "] ");
+        System.out.print(" [q=" + qmap.size() + ", l=" + fmap.size() + ", cap=" + qmap.getKeyCapacity());
     }
 
     //    @Benchmark
@@ -114,9 +113,9 @@ public class FastMapReadBenchmark {
         }
 //        System.out.println(Arrays.toString(fmap.getChainLenDistribution()));
 //        System.out.println(Arrays.toString(fmap.getDistributions()));
-        int[] distances = fmap.getDistances();
-        HeatmapUtils.writeToPngFile(distances, "distances.png");
-        System.out.println("---starting---");
+//        int[] distances = fmap.getDistances();
+//        HeatmapUtils.writeToPngFile(distances, "distances.png");
+//        System.out.println("---starting---");
 
 //        for (int i = 0; i < N; i++) {
 //            hmap.put(String.valueOf(i), (long) i);

@@ -57,7 +57,7 @@ public class FastMapReadLongBenchmark {
                 .include(FastMapReadLongBenchmark.class.getSimpleName())
                 .warmupIterations(3)
                 .measurementIterations(3)
-                .forks(0)
+                .forks(1)
                 .build();
 
         new Runner(opt).run();
